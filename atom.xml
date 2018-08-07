@@ -5,9 +5,9 @@
   
   <link href="/atom.xml" rel="self"/>
   
-  <link href="http://yoursite.com/"/>
+  <link href="https://johnleeeee.github.io/"/>
   <updated>2018-08-06T09:40:09.799Z</updated>
-  <id>http://yoursite.com/</id>
+  <id>https://johnleeeee.github.io/</id>
   
   <author>
     <name>神圣的小白菜</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>Hello World</title>
-    <link href="http://yoursite.com/2018/08/05/hello-world/"/>
-    <id>http://yoursite.com/2018/08/05/hello-world/</id>
+    <link href="https://johnleeeee.github.io/2018/08/05/hello-world/"/>
+    <id>https://johnleeeee.github.io/2018/08/05/hello-world/</id>
     <published>2018-08-05T08:30:09.236Z</published>
     <updated>2018-08-06T09:40:09.799Z</updated>
     
@@ -35,9 +35,9 @@
     </summary>
     
     
-      <category term="Testing" scheme="http://yoursite.com/tags/Testing/"/>
+      <category term="Testing" scheme="https://johnleeeee.github.io/tags/Testing/"/>
     
-      <category term="Another Tag" scheme="http://yoursite.com/tags/Another-Tag/"/>
+      <category term="Another Tag" scheme="https://johnleeeee.github.io/tags/Another-Tag/"/>
     
   </entry>
   
