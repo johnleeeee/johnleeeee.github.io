@@ -2028,7 +2028,7 @@ img:hover {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #7c69c2;
+  background: #75b58a;
 }
 .links-of-blogroll {
   font-size: 13px;
@@ -2777,14 +2777,7 @@ embed {
   background: url("https://ws1.sinaimg.cn/large/694830ebgy1fh3pyd05klj21kw0f2dy2.jpg");
 }
 .menu {
-  margin-top: 20px;
-  padding-left: 0;
-  text-align: center;
   background: rgba(255,255,255,0.65);
-  margin-left: auto;
-  margin-right: auto;
-  width: 470px;
-  border-radius: initial;
 }
 ul,
 menu,
@@ -2798,12 +2791,7 @@ dir {
   -webkit-padding-start: 40px;
 }
 .brand {
-  position: relative;
-  display: inline-block;
-  padding: 0 40px;
-  color: #fff;
   background: transparent;
-  border-bottom: none;
 }
 .with-love {
   color: #fa6431;
@@ -2812,11 +2800,7 @@ dir {
   display: none;
 }
 .site-title {
-  display: inline-block;
-  vertical-align: top;
-  line-height: 36px;
   font-size: 48px;
-  font-weight: normal;
   font-family: 'Lobster Two', 'Roboto Slab', "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 #animate {
