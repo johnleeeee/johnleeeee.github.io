@@ -2028,7 +2028,7 @@ img:hover {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #75b58a;
+  background: #77cc36;
 }
 .links-of-blogroll {
   font-size: 13px;
@@ -2776,8 +2776,29 @@ embed {
 .header {
   background: url("https://ws1.sinaimg.cn/large/694830ebgy1fh3pyd05klj21kw0f2dy2.jpg");
 }
-.menu {
-  background: rgba(255,255,255,0.65);
+@media (min-width: 768px) and (max-width: 991px) {
+  .menu {
+    margin-top: 20px;
+    padding-left: 0;
+    text-align: center;
+    background: rgba(255,255,255,0.65);
+    margin-left: auto;
+    margin-right: auto;
+    width: 470px;
+    border-radius: initial;
+  }
+}
+@media (min-width: 992px) {
+  .menu {
+    margin-top: 20px;
+    padding-left: 0;
+    text-align: center;
+    background: rgba(255,255,255,0.65);
+    margin-left: auto;
+    margin-right: auto;
+    width: 470px;
+    border-radius: initial;
+  }
 }
 ul,
 menu,
