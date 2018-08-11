@@ -1,26 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<search>
-  <entry>
-    <title><![CDATA[Redis基础简介]]></title>
-    <url>%2F2018%2F08%2F08%2FRedis%E7%AE%80%E4%BB%8B%2F</url>
-    <content type="text"><![CDATA[什么是redis？redis是一种内存中的数据结构存储系统，它可以用作数据库／缓存／消息中间件 redis常见的作用？项目中使用redis作为缓存使用，这样可以减轻数据库的压力，同时可以加快一些常用数据的查询效率。对于查询多修改少的数据进行缓存。 数据库中的数据与缓存中的数据如何实现同步？同步是同程序员代码来实现控制的。具体操作是： 当缓存中不存在数据时，先去数据库查询，成功后更新缓存。 当缓存中存在数据时，首先更新缓存中的数据，同时会生成对应的修改操作的key一张记录表，之后redis后台会有相关的机制（待查。。。），读取该列表的保存的key，找到对应的数据，同步更新到数据库中。 缓存中的数据如何实现持久化操作？为什么要进行持久化操作？redis中有完善的持久化策略。 RDB（默认）：这种备份方式的效率最高，在规定的时间周期内为数据进行备份，如在多少秒内进行了多少次set操作则进行一次备份，保存在rdb文件中，当redis重启之后会根据配置文件找到对应的备份文件还原数据。 AOF：实时的持久化策略，性能相对较低。有三种模式： ​ always：执行一次set就持久化一次。 ​ everysec：每隔一秒进行一次持久化（常用）。 ​ no：持久化的时间由操作系统决定。（一般不配）因为redis中的数据保存在内存中，如果出现宕机或断电的情况，会使内存中的数据丢失。如果是当作数据库和消息队列来使用时，这样的数据是绝不允许丢失的。 redis如何管理维护自身内存大小的？redis有6种内存优化管理的策略。 lru：删除最近最少使用的数据 volatile-lru:删除设定了超时时间的数据中找最近最少使用的数据 allkey-lru：所有的key根据lru算法进行删除 volatile-random：在设定了超时时间的数据中进行随机删除 allkey-random：在所有的key中进行随机删除 volatile-ttl：在设置了超时时间的数据中删除，将要超时的数据 noevication：默认策略，不会进行删除，当进行set操作时会返回报错信息 缓存中的数据结构是怎样的？支持的数据类型有哪些？redis数据是通过key-value方式进行存储的，redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合），zset（sorted set：有序集合） 简述redis分片？为什么需要redis分片？分片：根据某种规则… 分片的原因： redis内存满了，分片可实现动态扩容 redis服务器可能宕机，分片可以让每个节点保存一部分数据，宕机只会影响部分数据 简述redis哨兵机制？使用哨兵机制实现redis的高可用。哨兵机制实现原理： 哨兵会主动给主机发送心跳检测，如果主机三次没有响应，则会推选出从机代替成为新的主机。 当新的主机被推选之后，会修改所有的主从配置文件，重新实现主从挂载。 客户端无需关注谁是主机，只需要通过哨兵操作redis。 redis中hash一致性？ 均衡性：尽可能的让数据均匀的落在不同的节点上。虚拟节点可以有效的平衡数据量 单调性：如果节点的数量发生改变，则需要进行重新运算，节点中的数据可以重新挂载 分散性：在分布式系统中，由于部分操作看不到全部的内存空间，相同的key落入不同的位置 负载：在分布式系统中，由于部分操作看不到全部的内存空间，不同的key落到同一个位置 redis集群搭建？spring整合redis？redis作为分布式锁的使用？什么是redis分布式锁在分布式环境中，保证不同节点的线程同步执行。 分布式锁实现的三个核心：​ 1.加锁 setnx（key , 1） 当一个线程执行setnx返回1，说明原本的key不存在，该线程成功得到锁，否则说明该key已经存在，该线程抢锁失败。 2.解锁 del(key) 释放锁之后，其他线程就可以继续执行setnx命令来获得锁 3.超时锁 1.为什么要有超时锁？ 答：当一个得到锁的线程在执行任务的过程中挂掉，来不及显示的释放锁，那么这块资源将会永远被锁住，其他线程再也无法进入了。 setnx不支持超时参数，需要额外的指令： expire(key,30) redis分布式锁中三个致命的问题​ 场景一： 当某个线程执行setnx,成功得到了锁，但此时该节点挂了，却还没来得及执行expire指令，这样也会导致锁一直无法释放，即它们的执行不是原子性的。 解决：（版本2.6.12以上版本） set(key,1,30,NX)取代setnx指令 场景二： 假如A线程得到了锁，且成功得到了锁，并且设置了超时时间为30s,但如果A线程执行的很慢，超过30秒还没有执行完成，此时锁已经被释放，线程B获得了锁，当A执行完后，通过del指令来释放锁，但B线程还没有执行完，此时A线程把B现成的锁给释放了 解决：可以在加锁的时候把当前线程的ID作为value，并在删除之前验证key对应的value是不是自己的线程ID。但是此时的判断和释放锁也不是原子性的，这里我们需要使用Lua脚本来实现，此时验证与释放为原子性操作了。 String luaScript = “if redis.call(‘get’,KEY[1])==ARGV[1] then return redis.call(‘del’,KEYS) else return 0 end” redisClient.eval(luaScript,Collections.singletonList(key),Collections.singletonList(threadId)); 场景三：在场景二中出现了，两个线程访问同一个被锁的代码块的情况如何解决？ 解决：让获得锁的线程开启一个守护线程，当主线程快过期但还没有执行结束时，为其续航，当主线程真正执行完成后，再显示的关掉守护线程 另一种更优雅的实现方式，Zookeeper分布式锁 zookeeper的可靠性是要大于使用redis实现的分布式锁的，但是相比而言，redis的性能更好 Redission： 2.8.1的redisson需要jackson 2.5+版本 参考自：微信公众号-程序员小灰 redis作为消息队列使用？场景：用户下单，将用户生成展示的订单先处理完成，其他操作，则存入消息队列中，这样可以更快的响应用户请求，体验更好。 redis中常用的操作命令？http://www.redis.cn/commands.html redis缓存雪崩，缓存穿透，缓存并发？ 缓存穿透：场景：缓存穿透是指使用不存在的key进行大量的高并发访问，导致缓存无法命中，造成数据库压力过大，甚至压死。解决方案： 将所有数据hash到一个大的bitmap中，一个一定不存在的数据会被这个bitmap拦截掉。 将空的结果也放入缓存中，但给它一个默认值，并设置一个很短的生存时间这样第二次再访问就有值了，就不会访问数据库了。 缓存并发：场景：在高并发场景下，当一个缓存的key过期时，而当前key的访问量比较大，多个请求同时发现缓存过期，因此会访问数据库，导致数据库压力过大。解决方案： 分布式锁 本地锁（当一个服务有多个节点时不适用） 软过期（在业务数据中存储过期时间信息，由业务程序判断是否过期并更新，发现数据将要过期时，延长缓存的时间，同时派遣另一条线程去数据库获取最新的数据） 缓存雪崩：场景：缓存服务器重启或者大量的缓存在同一时间段内失效，导致数据库瞬时压力过大。解决方案：对不同的数据使用不同的失效时间，如基础时间上加一个随机时间。]]></content>
+<search> 
+  
+    
+    <entry>
+      <title>Redis基础简介</title>
+      <link href="/2018/08/08/Redis%E7%AE%80%E4%BB%8B/"/>
+      <url>/2018/08/08/Redis%E7%AE%80%E4%BB%8B/</url>
+      <content type="html"><![CDATA[<h2 id="什么是redis？"><a href="#什么是redis？" class="headerlink" title="什么是redis？"></a>什么是redis？</h2><p>redis是一种内存中的数据结构存储系统，它可以用作数据库／缓存／消息中间件。</p><h2 id="redis常见的作用？"><a href="#redis常见的作用？" class="headerlink" title="redis常见的作用？"></a>redis常见的作用？</h2><p>项目中使用redis作为缓存使用，这样可以减轻数据库的压力，同时可以加快一些常用数据的查询效率。对于查询多修改少的数据进行缓存。<br><a id="more"></a></p><h2 id="数据库中的数据与缓存中的数据如何实现同步？"><a href="#数据库中的数据与缓存中的数据如何实现同步？" class="headerlink" title="数据库中的数据与缓存中的数据如何实现同步？"></a>数据库中的数据与缓存中的数据如何实现同步？</h2><p>同步是同程序员代码来实现控制的。具体操作是：</p><ol><li>当缓存中不存在数据时，先去数据库查询，成功后更新缓存。</li><li>当缓存中存在数据时，首先更新缓存中的数据，同时会生成对应的修改操作的key一张记录表，之后redis后台会有相关的机制（待查。。。），读取该列表的保存的key，找到对应的数据，同步更新到数据库中。</li></ol><h2 id="缓存中的数据如何实现持久化操作？为什么要进行持久化操作？"><a href="#缓存中的数据如何实现持久化操作？为什么要进行持久化操作？" class="headerlink" title="缓存中的数据如何实现持久化操作？为什么要进行持久化操作？"></a>缓存中的数据如何实现持久化操作？为什么要进行持久化操作？</h2><p>redis中有完善的持久化策略。</p><ul><li><p>RDB（默认）：这种备份方式的效率最高，在规定的时间周期内为数据进行备份，如在多少秒内进行了多少次set操作则进行一次备份，保存在rdb文件中，当redis重启之后会根据配置文件找到对应的备份文件还原数据。</p></li><li><p>AOF：实时的持久化策略，性能相对较低。有三种模式：</p><p>​    always：执行一次set就持久化一次。</p><p>​    everysec：每隔一秒进行一次持久化（常用）。</p><p>​    no：持久化的时间由操作系统决定。（一般不配）<br>因为redis中的数据保存在内存中，如果出现宕机或断电的情况，会使内存中的数据丢失。如果是当作数据库和消息队列来使用时，这样的数据是绝不允许丢失的。</p></li></ul><h2 id="redis如何管理维护自身内存大小的？"><a href="#redis如何管理维护自身内存大小的？" class="headerlink" title="redis如何管理维护自身内存大小的？"></a>redis如何管理维护自身内存大小的？</h2><p>redis有6种内存优化管理的策略。</p><ol><li>lru：删除最近最少使用的数据</li><li>volatile-lru:删除设定了超时时间的数据中找最近最少使用的数据</li><li>allkey-lru：所有的key根据lru算法进行删除</li><li>volatile-random：在设定了超时时间的数据中进行随机删除</li><li>allkey-random：在所有的key中进行随机删除</li><li>volatile-ttl：在设置了超时时间的数据中删除，将要超时的数据</li><li>noevication：默认策略，不会进行删除，当进行set操作时会返回报错信息</li></ol><h2 id="缓存中的数据结构是怎样的？支持的数据类型有哪些？"><a href="#缓存中的数据结构是怎样的？支持的数据类型有哪些？" class="headerlink" title="缓存中的数据结构是怎样的？支持的数据类型有哪些？"></a>缓存中的数据结构是怎样的？支持的数据类型有哪些？</h2><p>redis数据是通过key-value方式进行存储的，redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合），zset（sorted set：有序集合）</p><h2 id="简述redis分片？为什么需要redis分片？"><a href="#简述redis分片？为什么需要redis分片？" class="headerlink" title="简述redis分片？为什么需要redis分片？"></a>简述redis分片？为什么需要redis分片？</h2><p>分片：根据某种规则…</p><p>分片的原因：</p><ol><li>redis内存满了，分片可实现动态扩容</li><li>redis服务器可能宕机，分片可以让每个节点保存一部分数据，宕机只会影响部分数据</li></ol><h2 id="简述redis哨兵机制？"><a href="#简述redis哨兵机制？" class="headerlink" title="简述redis哨兵机制？"></a>简述redis哨兵机制？</h2><p>使用哨兵机制实现redis的高可用。<br>哨兵机制实现原理：</p><ol><li>哨兵会主动给主机发送心跳检测，如果主机三次没有响应，则会推选出从机代替成为新的主机。</li><li>当新的主机被推选之后，会修改所有的主从配置文件，重新实现主从挂载。</li><li>客户端无需关注谁是主机，只需要通过哨兵操作redis。</li></ol><h2 id="redis中hash一致性？"><a href="#redis中hash一致性？" class="headerlink" title="redis中hash一致性？"></a>redis中hash一致性？</h2><ol><li>均衡性：尽可能的让数据均匀的落在不同的节点上。虚拟节点可以有效的平衡数据量</li><li>单调性：如果节点的数量发生改变，则需要进行重新运算，节点中的数据可以重新挂载</li><li>分散性：在分布式系统中，由于部分操作看不到全部的内存空间，相同的key落入不同的位置</li><li>负载：在分布式系统中，由于部分操作看不到全部的内存空间，不同的key落到同一个位置</li></ol><h2 id="redis集群搭建？"><a href="#redis集群搭建？" class="headerlink" title="redis集群搭建？"></a>redis集群搭建？</h2><h2 id="spring整合redis？"><a href="#spring整合redis？" class="headerlink" title="spring整合redis？"></a>spring整合redis？</h2><h2 id="redis作为分布式锁的使用？"><a href="#redis作为分布式锁的使用？" class="headerlink" title="redis作为分布式锁的使用？"></a>redis作为分布式锁的使用？</h2><h6 id="什么是redis分布式锁"><a href="#什么是redis分布式锁" class="headerlink" title="什么是redis分布式锁"></a>什么是redis分布式锁</h6><p>在分布式环境中，保证不同节点的线程同步执行。</p><h6 id="分布式锁实现的三个核心："><a href="#分布式锁实现的三个核心：" class="headerlink" title="分布式锁实现的三个核心："></a>分布式锁实现的三个核心：</h6><p>​    1.加锁<br>    setnx（key , 1）<br>    当一个线程执行setnx返回1，说明原本的key不存在，该线程成功得到锁，否则说明该key已经存在，该线程抢锁失败。<br>    2.解锁<br>        del(key)<br>        释放锁之后，其他线程就可以继续执行setnx命令来获得锁<br>    3.超时锁<br>    1.为什么要有超时锁？<br>    答：当一个得到锁的线程在执行任务的过程中挂掉，来不及显示的释放锁，那么这块资源将会永远被锁住，其他线程再也无法进入了。<br>    setnx不支持超时参数，需要额外的指令：<br>    expire(key,30)</p><h6 id="redis分布式锁中三个致命的问题"><a href="#redis分布式锁中三个致命的问题" class="headerlink" title="redis分布式锁中三个致命的问题"></a>redis分布式锁中三个致命的问题</h6><p>​    场景一：<br>        当某个线程执行setnx,成功得到了锁，但此时该节点挂了，却还没来得及执行expire指令，这样也会导致锁一直无法释放，即它们的执行不是原子性的。<br>    解决：（版本2.6.12以上版本）<br>    set(key,1,30,NX)取代setnx指令<br>    场景二：<br>        假如A线程得到了锁，且成功得到了锁，并且设置了超时时间为30s,但如果A线程执行的很慢，超过30秒还没有执行完成，此时锁已经被释放，线程B获得了锁，当A执行完后，通过del指令来释放锁，但B线程还没有执行完，此时A线程把B现成的锁给释放了<br>    解决：可以在加锁的时候把当前线程的ID作为value，并在删除之前验证key对应的value是不是自己的线程ID。但是此时的判断和释放锁也不是原子性的，这里我们需要使用Lua脚本来实现，此时验证与释放为原子性操作了。<br>    String luaScript = “if redis.call(‘get’,KEY[1])==ARGV[1] then return redis.call(‘del’,KEYS) else return 0 end”<br>    redisClient.eval(luaScript,Collections.singletonList(key),Collections.singletonList(threadId));<br>    场景三：在场景二中出现了，两个线程访问同一个被锁的代码块的情况如何解决？<br>        解决：让获得锁的线程开启一个守护线程，当主线程快过期但还没有执行结束时，为其续航，当主线程真正执行完成后，再显示的关掉守护线程</p><pre><code>另一种更优雅的实现方式，Zookeeper分布式锁zookeeper的可靠性是要大于使用redis实现的分布式锁的，但是相比而言，redis的性能更好Redission：2.8.1的redisson需要jackson 2.5+版本</code></pre><p>参考自：微信公众号-程序员小灰</p><h2 id="redis作为消息队列使用？"><a href="#redis作为消息队列使用？" class="headerlink" title="redis作为消息队列使用？"></a>redis作为消息队列使用？</h2><p>场景：用户下单，将用户生成展示的订单先处理完成，其他操作，则存入消息队列中，这样可以更快的响应用户请求，体验更好。</p><h2 id="redis中常用的操作命令？"><a href="#redis中常用的操作命令？" class="headerlink" title="redis中常用的操作命令？"></a>redis中常用的操作命令？</h2><p><a href="http://www.redis.cn/commands.html" target="_blank" rel="noopener">http://www.redis.cn/commands.html</a></p><h2 id="redis缓存雪崩，缓存穿透，缓存并发？"><a href="#redis缓存雪崩，缓存穿透，缓存并发？" class="headerlink" title="redis缓存雪崩，缓存穿透，缓存并发？"></a>redis缓存雪崩，缓存穿透，缓存并发？</h2><ul><li>缓存穿透：<br>场景：缓存穿透是指使用不存在的key进行大量的高并发访问，导致缓存无法命中，造成数据库压力过大，甚至压死。<br>解决方案：<ol><li>将所有数据hash到一个大的bitmap中，一个一定不存在的数据会被这个bitmap拦截掉。</li><li>将空的结果也放入缓存中，但给它一个默认值，并设置一个很短的生存时间这样第二次再访问就有值了，就不会访问数据库了。</li></ol></li><li><p>缓存并发：<br>场景：在高并发场景下，当一个缓存的key过期时，而当前key的访问量比较大，多个请求同时发现缓存过期，因此会访问数据库，导致数据库压力过大。<br>解决方案：</p><ol><li>分布式锁</li><li>本地锁（当一个服务有多个节点时不适用）</li><li>软过期（在业务数据中存储过期时间信息，由业务程序判断是否过期并更新，发现数据将要过期时，延长缓存的时间，同时派遣另一条线程去数据库获取最新的数据）</li></ol></li><li><p>缓存雪崩：<br>场景：缓存服务器重启或者大量的缓存在同一时间段内失效，导致数据库瞬时压力过大。<br>解决方案：对不同的数据使用不同的失效时间，如基础时间上加一个随机时间。</p><hr></li></ul><p><img src="http://wx2.sinaimg.cn/sq612/005AqIfAgy1fu2f631ch9j30k00k0wga.jpg" alt=""></p>]]></content>
+      
       <categories>
-        <category>架构</category>
+          
+          <category> 架构 </category>
+          
       </categories>
-      <tags>
-        <tag>redis</tag>
-        <tag>缓存</tag>
-        <tag>消息队列</tag>
-        <tag>分布式锁</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title><![CDATA[Hello World]]></title>
-    <url>%2F2018%2F08%2F05%2Fhello-world%2F</url>
-    <content type="text"><![CDATA[Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick StartCreate a new post1$ hexo new "My New Post" More info: Writing Run server1$ hexo server More info: Server Generate static files1$ hexo generate More info: Generating Deploy to remote sites1$ hexo deploy More info: Deployment]]></content>
-      <tags>
-        <tag>Testing</tag>
-        <tag>Another Tag</tag>
-      </tags>
-  </entry>
+      
+      
+        <tags>
+            
+            <tag> redis </tag>
+            
+            <tag> 缓存 </tag>
+            
+            <tag> 消息队列 </tag>
+            
+            <tag> 分布式锁 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>Redis基础简介测试</title>
+      <link href="/2018/08/08/Redis%E7%AE%80%E4%BB%8B%E6%B5%8B%E8%AF%95/"/>
+      <url>/2018/08/08/Redis%E7%AE%80%E4%BB%8B%E6%B5%8B%E8%AF%95/</url>
+      <content type="html"><![CDATA[<h2 id="什么是redis？"><a href="#什么是redis？" class="headerlink" title="什么是redis？"></a>什么是redis？</h2><p>redis是一种内存中的数据结构存储系统，它可以用作数据库／缓存／消息中间件。</p><h2 id="redis常见的作用？"><a href="#redis常见的作用？" class="headerlink" title="redis常见的作用？"></a>redis常见的作用？</h2><p>项目中使用redis作为缓存使用，这样可以减轻数据库的压力，同时可以加快一些常用数据的查询效率。对于查询多修改少的数据进行缓存。<br><a id="more"></a></p><h2 id="数据库中的数据与缓存中的数据如何实现同步？"><a href="#数据库中的数据与缓存中的数据如何实现同步？" class="headerlink" title="数据库中的数据与缓存中的数据如何实现同步？"></a>数据库中的数据与缓存中的数据如何实现同步？</h2><p>同步是同程序员代码来实现控制的。具体操作是：</p><ol><li>当缓存中不存在数据时，先去数据库查询，成功后更新缓存。</li><li>当缓存中存在数据时，首先更新缓存中的数据，同时会生成对应的修改操作的key一张记录表，之后redis后台会有相关的机制（待查。。。），读取该列表的保存的key，找到对应的数据，同步更新到数据库中。</li></ol><h2 id="缓存中的数据如何实现持久化操作？为什么要进行持久化操作？"><a href="#缓存中的数据如何实现持久化操作？为什么要进行持久化操作？" class="headerlink" title="缓存中的数据如何实现持久化操作？为什么要进行持久化操作？"></a>缓存中的数据如何实现持久化操作？为什么要进行持久化操作？</h2><p>redis中有完善的持久化策略。</p><ul><li><p>RDB（默认）：这种备份方式的效率最高，在规定的时间周期内为数据进行备份，如在多少秒内进行了多少次set操作则进行一次备份，保存在rdb文件中，当redis重启之后会根据配置文件找到对应的备份文件还原数据。</p></li><li><p>AOF：实时的持久化策略，性能相对较低。有三种模式：</p><p>​    always：执行一次set就持久化一次。</p><p>​    everysec：每隔一秒进行一次持久化（常用）。</p><p>​    no：持久化的时间由操作系统决定。（一般不配）<br>因为redis中的数据保存在内存中，如果出现宕机或断电的情况，会使内存中的数据丢失。如果是当作数据库和消息队列来使用时，这样的数据是绝不允许丢失的。</p></li></ul><h2 id="redis如何管理维护自身内存大小的？"><a href="#redis如何管理维护自身内存大小的？" class="headerlink" title="redis如何管理维护自身内存大小的？"></a>redis如何管理维护自身内存大小的？</h2><p>redis有6种内存优化管理的策略。</p><ol><li>lru：删除最近最少使用的数据</li><li>volatile-lru:删除设定了超时时间的数据中找最近最少使用的数据</li><li>allkey-lru：所有的key根据lru算法进行删除</li><li>volatile-random：在设定了超时时间的数据中进行随机删除</li><li>allkey-random：在所有的key中进行随机删除</li><li>volatile-ttl：在设置了超时时间的数据中删除，将要超时的数据</li><li>noevication：默认策略，不会进行删除，当进行set操作时会返回报错信息</li></ol><h2 id="缓存中的数据结构是怎样的？支持的数据类型有哪些？"><a href="#缓存中的数据结构是怎样的？支持的数据类型有哪些？" class="headerlink" title="缓存中的数据结构是怎样的？支持的数据类型有哪些？"></a>缓存中的数据结构是怎样的？支持的数据类型有哪些？</h2><p>redis数据是通过key-value方式进行存储的，redis支持五种数据类型：string（字符串），hash（哈希），list（列表），set（集合），zset（sorted set：有序集合）</p><h2 id="简述redis分片？为什么需要redis分片？"><a href="#简述redis分片？为什么需要redis分片？" class="headerlink" title="简述redis分片？为什么需要redis分片？"></a>简述redis分片？为什么需要redis分片？</h2><p>分片：根据某种规则…</p><p>分片的原因：</p><ol><li>redis内存满了，分片可实现动态扩容</li><li>redis服务器可能宕机，分片可以让每个节点保存一部分数据，宕机只会影响部分数据</li></ol><h2 id="简述redis哨兵机制？"><a href="#简述redis哨兵机制？" class="headerlink" title="简述redis哨兵机制？"></a>简述redis哨兵机制？</h2><p>使用哨兵机制实现redis的高可用。<br>哨兵机制实现原理：</p><ol><li>哨兵会主动给主机发送心跳检测，如果主机三次没有响应，则会推选出从机代替成为新的主机。</li><li>当新的主机被推选之后，会修改所有的主从配置文件，重新实现主从挂载。</li><li>客户端无需关注谁是主机，只需要通过哨兵操作redis。</li></ol><h2 id="redis中hash一致性？"><a href="#redis中hash一致性？" class="headerlink" title="redis中hash一致性？"></a>redis中hash一致性？</h2><ol><li>均衡性：尽可能的让数据均匀的落在不同的节点上。虚拟节点可以有效的平衡数据量</li><li>单调性：如果节点的数量发生改变，则需要进行重新运算，节点中的数据可以重新挂载</li><li>分散性：在分布式系统中，由于部分操作看不到全部的内存空间，相同的key落入不同的位置</li><li>负载：在分布式系统中，由于部分操作看不到全部的内存空间，不同的key落到同一个位置</li></ol><h2 id="redis集群搭建？"><a href="#redis集群搭建？" class="headerlink" title="redis集群搭建？"></a>redis集群搭建？</h2><h2 id="spring整合redis？"><a href="#spring整合redis？" class="headerlink" title="spring整合redis？"></a>spring整合redis？</h2><h2 id="redis作为分布式锁的使用？"><a href="#redis作为分布式锁的使用？" class="headerlink" title="redis作为分布式锁的使用？"></a>redis作为分布式锁的使用？</h2><h6 id="什么是redis分布式锁"><a href="#什么是redis分布式锁" class="headerlink" title="什么是redis分布式锁"></a>什么是redis分布式锁</h6><p>在分布式环境中，保证不同节点的线程同步执行。</p><h6 id="分布式锁实现的三个核心："><a href="#分布式锁实现的三个核心：" class="headerlink" title="分布式锁实现的三个核心："></a>分布式锁实现的三个核心：</h6><p>​    1.加锁<br>    setnx（key , 1）<br>    当一个线程执行setnx返回1，说明原本的key不存在，该线程成功得到锁，否则说明该key已经存在，该线程抢锁失败。<br>    2.解锁<br>        del(key)<br>        释放锁之后，其他线程就可以继续执行setnx命令来获得锁<br>    3.超时锁<br>    1.为什么要有超时锁？<br>    答：当一个得到锁的线程在执行任务的过程中挂掉，来不及显示的释放锁，那么这块资源将会永远被锁住，其他线程再也无法进入了。<br>    setnx不支持超时参数，需要额外的指令：<br>    expire(key,30)</p><h6 id="redis分布式锁中三个致命的问题"><a href="#redis分布式锁中三个致命的问题" class="headerlink" title="redis分布式锁中三个致命的问题"></a>redis分布式锁中三个致命的问题</h6><p>​    场景一：<br>        当某个线程执行setnx,成功得到了锁，但此时该节点挂了，却还没来得及执行expire指令，这样也会导致锁一直无法释放，即它们的执行不是原子性的。<br>    解决：（版本2.6.12以上版本）<br>    set(key,1,30,NX)取代setnx指令<br>    场景二：<br>        假如A线程得到了锁，且成功得到了锁，并且设置了超时时间为30s,但如果A线程执行的很慢，超过30秒还没有执行完成，此时锁已经被释放，线程B获得了锁，当A执行完后，通过del指令来释放锁，但B线程还没有执行完，此时A线程把B现成的锁给释放了<br>    解决：可以在加锁的时候把当前线程的ID作为value，并在删除之前验证key对应的value是不是自己的线程ID。但是此时的判断和释放锁也不是原子性的，这里我们需要使用Lua脚本来实现，此时验证与释放为原子性操作了。<br>    String luaScript = “if redis.call(‘get’,KEY[1])==ARGV[1] then return redis.call(‘del’,KEYS) else return 0 end”<br>    redisClient.eval(luaScript,Collections.singletonList(key),Collections.singletonList(threadId));<br>    场景三：在场景二中出现了，两个线程访问同一个被锁的代码块的情况如何解决？<br>        解决：让获得锁的线程开启一个守护线程，当主线程快过期但还没有执行结束时，为其续航，当主线程真正执行完成后，再显示的关掉守护线程</p><pre><code>另一种更优雅的实现方式，Zookeeper分布式锁zookeeper的可靠性是要大于使用redis实现的分布式锁的，但是相比而言，redis的性能更好Redission：2.8.1的redisson需要jackson 2.5+版本</code></pre><p>参考自：微信公众号-程序员小灰</p><h2 id="redis作为消息队列使用？"><a href="#redis作为消息队列使用？" class="headerlink" title="redis作为消息队列使用？"></a>redis作为消息队列使用？</h2><p>场景：用户下单，将用户生成展示的订单先处理完成，其他操作，则存入消息队列中，这样可以更快的响应用户请求，体验更好。</p><h2 id="redis中常用的操作命令？"><a href="#redis中常用的操作命令？" class="headerlink" title="redis中常用的操作命令？"></a>redis中常用的操作命令？</h2><p><a href="http://www.redis.cn/commands.html" target="_blank" rel="noopener">http://www.redis.cn/commands.html</a></p><h2 id="redis缓存雪崩，缓存穿透，缓存并发？"><a href="#redis缓存雪崩，缓存穿透，缓存并发？" class="headerlink" title="redis缓存雪崩，缓存穿透，缓存并发？"></a>redis缓存雪崩，缓存穿透，缓存并发？</h2><ul><li>缓存穿透：<br>场景：缓存穿透是指使用不存在的key进行大量的高并发访问，导致缓存无法命中，造成数据库压力过大，甚至压死。<br>解决方案：<ol><li>将所有数据hash到一个大的bitmap中，一个一定不存在的数据会被这个bitmap拦截掉。</li><li>将空的结果也放入缓存中，但给它一个默认值，并设置一个很短的生存时间这样第二次再访问就有值了，就不会访问数据库了。</li></ol></li><li><p>缓存并发：<br>场景：在高并发场景下，当一个缓存的key过期时，而当前key的访问量比较大，多个请求同时发现缓存过期，因此会访问数据库，导致数据库压力过大。<br>解决方案：</p><ol><li>分布式锁</li><li>本地锁（当一个服务有多个节点时不适用）</li><li>软过期（在业务数据中存储过期时间信息，由业务程序判断是否过期并更新，发现数据将要过期时，延长缓存的时间，同时派遣另一条线程去数据库获取最新的数据）</li></ol></li><li><p>缓存雪崩：<br>场景：缓存服务器重启或者大量的缓存在同一时间段内失效，导致数据库瞬时压力过大。<br>解决方案：对不同的数据使用不同的失效时间，如基础时间上加一个随机时间。</p><hr></li></ul><p><img src="http://wx2.sinaimg.cn/sq612/005AqIfAgy1fu2f631ch9j30k00k0wga.jpg" alt=""></p>]]></content>
+      
+      <categories>
+          
+          <category> 架构 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> redis </tag>
+            
+            <tag> 缓存 </tag>
+            
+            <tag> 消息队列 </tag>
+            
+            <tag> 分布式锁 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>Hello World</title>
+      <link href="/2018/08/05/hello-world/"/>
+      <url>/2018/08/05/hello-world/</url>
+      <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.<br><a id="more"></a></p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
+      
+      
+        <tags>
+            
+            <tag> Testing </tag>
+            
+            <tag> Another Tag </tag>
+            
+        </tags>
+      
+    </entry>
+    
+  
+  
 </search>
