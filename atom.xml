@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://www.keenlee.net/"/>
-  <updated>2018-11-27T05:05:26.485Z</updated>
+  <updated>2018-11-30T10:02:09.168Z</updated>
   <id>https://www.keenlee.net/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>基于Hexo-next搭建本站</title>
+    <link href="https://www.keenlee.net/2018/11/30/%E5%9F%BA%E4%BA%8Ehexo-next%E6%90%AD%E5%BB%BA%E6%9C%AC%E7%AB%99/"/>
+    <id>https://www.keenlee.net/2018/11/30/基于hexo-next搭建本站/</id>
+    <published>2018-11-30T09:50:11.000Z</published>
+    <updated>2018-11-30T10:02:09.168Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="环境："><a href="#环境：" class="headerlink" title="环境："></a>环境：</h2><ul><li>安装git</li><li>安装node.js</li><li>安装hexo</li></ul><a id="more"></a><h2 id="插件："><a href="#插件：" class="headerlink" title="插件："></a>插件：</h2><ul><li>微博图床</li><li>网易云音乐外链</li><li>leanCloud:访问量统计 valine评论</li><li>hexo-wordcount:字数统计，阅读量统计等</li><li>addthis社会化分享</li><li>daovoice在线沟通</li><li>fontawesome矢量图标</li><li>Gulp博文压缩</li><li>腾讯公益404</li></ul><h2 id="功能："><a href="#功能：" class="headerlink" title="功能："></a>功能：</h2><ul><li>1.访问人数统计 </li><li>2.文章阅读次数 </li><li>3.文章字数</li><li>4.文章阅读时长预测 </li><li>5.博客总字数 </li><li>6.文章加密 </li><li>7.社会化分享 </li><li>8.文章评论</li><li>9.在线沟通</li><li>10.网易云音乐播放外链</li><li>11.站外链接 </li><li>12.友情链接 </li><li>13.站点运行时间 </li><li>14.博客粒子背景 </li><li>15.跳动红心 </li><li>16.文章赞赏 </li><li>17.标签优化 </li><li>18.文章结束提示语 </li><li>19.首页头部美化 </li><li>20.GitHub角标 </li><li>21.腾讯公益404 </li><li>22.文章版权信息</li><li>23.移动端与网页端差异化展示</li></ul><h2 id="参考文档："><a href="#参考文档：" class="headerlink" title="参考文档："></a>参考文档：</h2><ul><li><h2 id="待完善的功能："><a href="#待完善的功能：" class="headerlink" title="待完善的功能："></a>待完善的功能：</h2></li><li><p>博客宠物</p></li><li>图片板块</li><li>音乐板块</li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;环境：&quot;&gt;&lt;a href=&quot;#环境：&quot; class=&quot;headerlink&quot; title=&quot;环境：&quot;&gt;&lt;/a&gt;环境：&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;安装git&lt;/li&gt;
+&lt;li&gt;安装node.js&lt;/li&gt;
+&lt;li&gt;安装hexo&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="Hexo" scheme="https://www.keenlee.net/categories/Hexo/"/>
+    
+    
+      <category term="Hexo" scheme="https://www.keenlee.net/tags/Hexo/"/>
+    
+      <category term="hero-next" scheme="https://www.keenlee.net/tags/hero-next/"/>
+    
+  </entry>
   
   <entry>
     <title>CentOS7搭建SVN服务</title>
