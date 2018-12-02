@@ -25,8 +25,8 @@
       </tags>
   </entry>
   <entry>
-    <title><![CDATA[CentOS7搭建SVN服务]]></title>
-    <url>%2F2018%2F11%2F27%2FCentOS7%E6%90%AD%E5%BB%BASVN%E6%9C%8D%E5%8A%A1%2F</url>
+    <title><![CDATA[CentOS7搭建SVN服务基础小结]]></title>
+    <url>%2F2018%2F11%2F27%2FCentOS7%E6%90%AD%E5%BB%BASVN%E6%9C%8D%E5%8A%A1%E5%9F%BA%E7%A1%80%E5%B0%8F%E7%BB%93%2F</url>
     <content type="text"><![CDATA[1.下载安装环境：CentOS7，subversion-1.7.14 查看是否已经安装过find / -name subversion 开始安装yum install subversion 查看安装目录rpm -pl subversion 查看一下系统是否默认绑定了svn根目录路径ps -ef|grep svnserve如果已经绑定则 kill -9 pid 2.创建仓库注意仓库根目录与版本库的区别 创建仓库根目录mkdir -p /var/svn/svnrepos 创建项目版本库cd /var/svn/svnrepossvnadmin create testsvn 3.修改版本库配置 cd testsvn/conf ls authz passwd svnserve.conf authz 是权限控制文件(添加用户和分组及它们的读写权限)vi authz[/] #权限的目录，此处为仓库下的所有文件admin=rw #可读写test1=r #可读*= #通配其它，无权限 另可配置分组权限配置[groups]group1 = admingroup2 = test1,test2[/]@group1 = rw@group2 = r*=r此时admin与test1可读可写，test2只可读 passwd 是帐号密码文件vi passwdadmin=123456 #账号=密码 svnserve.conf 是SVN服务配置文件vi svnserve.conf打开下面的5个注释anon-access = read #匿名用户可读auth-access = write #授权用户可写password-db = passwd #使用哪个文件作为账号文件（就是上面的那个文件）authz-db = authz #使用哪个文件作为权限文件（就是上面的那个文件）realm = /var/svn/svnrepos # 认证空间名，版本库所在目录注意：删除#号注释时前面不要留空格，否则后面连接时会报错 4.启动与关闭 启动服务svnserve -d -r /var/svn/svnrepos #-d表示守护进程， -r表示在后台执行 关闭服务ps -ef|grep svnservekill -9 pid 5.客户端连接注意关闭防火墙systemctl stop firewalld.service查看防火墙状态firewall-cmd –state windows可使用TortoiseSVN，Mac上可使用cornerstone。也可以使用eclipse，idea等开发工具连接输入地址格式：svn://ip:port/版本库名称（默认端口3690）如：svn://ip:3690/testsvn]]></content>
       <categories>
         <category>Linux</category>
